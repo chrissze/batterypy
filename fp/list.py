@@ -1,0 +1,69 @@
+
+from typing import Any, List, Optional
+
+
+class Infix:
+    def __init__(self, function):
+        self.function = function
+    def __ror__(self, other):
+        return Infix(lambda x, self=self, other=other: self.function(other, x))
+    def __or__(self, other):
+        return self.function(other)
+    def __rlshift__(self, other):
+        return Infix(lambda x, self=self, other=other: self.function(other, x))
+    def __rshift__(self, other):
+        return self.function(other)
+    def __call__(self, value1, value2):
+        return self.function(value1, value2)
+
+
+# print( [1,2,3,4] |z| -4)
+z = Infix(lambda xs,i: xs[i] if abs(i) < (l := len(xs)) or -i == l else None)
+
+
+
+# xs can be list or tuple
+def grab(xs, i:int) -> Optional[Any]:
+    if abs(i) < (l := len(xs)) or -i == l :
+        return xs[i]
+    else:
+        return None
+
+def first(lst: List[Any]) -> Optional[Any]:
+    if lst:
+        return lst[0]
+    else:
+        return None
+
+def second(lst: List[Any]) -> Optional[Any]:
+    if len(lst) > 1:
+        return lst[1]
+    else:
+        return None
+
+def third(lst: List[Any]) -> Optional[Any]:
+    if len(lst) > 2:
+        return lst[2]
+    else:
+        return None
+
+def fourth(lst: List[Any]) -> Optional[Any]:
+    if len(lst) > 3:
+        return lst[3]
+    else:
+        return None
+
+def fifth(lst: List[Any]) -> Optional[Any]:
+    if len(lst) > 4:
+        return lst[4]
+    else:
+        return None
+
+
+def last(lst: List[Any]) -> Optional[Any]:
+    if lst:
+        return lst[-1]
+    else:
+        return None
+
+
