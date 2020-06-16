@@ -2,298 +2,294 @@ from typing import List
 from datetime import date, datetime,timedelta
 
 
-def adddays(d: date, i: int) -> date:
+def add_days(d: date, i: int) -> date:
     return d + timedelta(days=i)
 
 
-def addtradingdays(d: date, i: int) -> date:
+def add_trading_days(d: date, i: int) -> date:
     n = i
     day = d
     if i > 0:
         while n > 0:
-            day = nexttradingday(day)
+            day = next_trading_day(day)
             n -= 1
         return day
     elif i < 0:
         while n < 0:
-            day = previoustradingday(day)
+            day = previous_trading_day(day)
             n += 1
         return day
     else:
         return d
 
 
-def exchangeholidays(year: int) -> List[date]:
-    return federalholidays(year) + [holidaygoodfriday(year)]
+def exchange_holidays(year: int) -> List[date]:
+    return federal_holidays(year) + [holiday_good_friday(year)]
 
 
-def federalholidays(year: int) -> List[date]:
+def federal_holidays(year: int) -> List[date]:
     # Federal holidays do not include Easter
     # New Years Day might be Saturday and falls into 31 Dec, see year 2010
     # https://www.opm.gov/policy-data-oversight/snow-dismissal-procedures/federal-holidays/
     dec31 = date(year, 12, 31)
-    holidays = [holidaynewyears(year), holidaymartinluther(year), holidaywashington(year)
-            , holidaymemorial(year), holidayindependence(year), holidaylabor(year)
-            , holidaycolumbus(year), holidayveterans(year), holidaythanksgiving(year), holidaychristmas(year)]
-    if isfriday(dec31):
+    holidays = [holiday_new_years(year), holiday_martin_luther(year), holiday_washington(year)
+            , holiday_memorial(year), holiday_independence(year), holiday_labor(year)
+            , holiday_columbus(year), holiday_veterans(year), holiday_thanksgiving(year), holiday_christmas(year)]
+    if is_friday(dec31):
         return holidays + [dec31]
     else:
         return holidays
 
 
-def gettradingday() -> date:
-    return previoustradingday(date.today())
+def get_trading_day() -> date:
+    return previous_trading_day(date.today())
 
 
-def gettradingdayutc() -> date:
-    return previoustradingday(getutctoday())
+def get_trading_day_utc() -> date:
+    return previous_trading_day(get_utc_today())
 
 
-def getutctoday() -> date:
+def get_utc_today() -> date:
     t = datetime.utcnow()
     return date(t.year, t.month, t.day)
 
 
-def gregorianeaster(year: int) -> date:
+def gregorian_easter(year: int) -> date:
     century = year // 100 + 1
     shifted_epact = (11 * (year % 19) + 14 - (3 * century) // 4 + (8 * century + 5) // 25) % 30
     adjusted_epact = shifted_epact + 1 if shifted_epact == 0 or (shifted_epact == 1 and year % 19 > 10) \
         else shifted_epact
-    pascha_moon = adddays(date(year, 4, 19), - adjusted_epact)
-    easter = nextsunday(pascha_moon)
+    pascha_moon = add_days(date(year, 4, 19), - adjusted_epact)
+    easter = next_sunday(pascha_moon)
     return easter
 
 
-def holidaynewyears(year: int) -> date:
+def holiday_new_years(year: int) -> date:
     jan1 = date(year, 1, 1)
-    if issaturday(jan1):
-        return adddays(jan1, -1)
-    elif issunday(jan1):
+    if is_saturday(jan1):
+        return add_days(jan1, -1)
+    elif is_sunday(jan1):
         return date(year, 1, 2)
     else:
         return jan1
 
 
-def holidaymartinluther(year: int) -> date:
-    return nextmonday(date(year, 1, 14))
+def holiday_martin_luther(year: int) -> date:
+    return next_monday(date(year, 1, 14))
 
 
-def holidaywashington(year: int) -> date:
-    return nextmonday(date(year, 2, 14))
+def holiday_washington(year: int) -> date:
+    return next_monday(date(year, 2, 14))
 
 
-def holidaygoodfriday(year: int) -> date:
-    return lastfriday(gregorianeaster(year))
+def holiday_good_friday(year: int) -> date:
+    return last_friday(gregorian_easter(year))
 
 
-def holidaymemorial(year: int) -> date:
-    return lastmonday(date(year, 6, 1))
+def holiday_memorial(year: int) -> date:
+    return last_monday(date(year, 6, 1))
 
 
-def holidayindependence(year: int) -> date:
+def holiday_independence(year: int) -> date:
     july4 = date(year, 7, 4)
-    if issaturday(july4):
+    if is_saturday(july4):
         return date(year, 7, 3)
-    elif issunday(july4):
+    elif is_sunday(july4):
         return date(year, 7, 5)
     else:
         return july4
 
 
-def holidaylabor(year: int) -> date:
-    return nextmonday(date(year, 8, 31))
+def holiday_labor(year: int) -> date:
+    return next_monday(date(year, 8, 31))
 
 
-def holidaycolumbus(year: int) -> date:
-    return nextmonday(date(year, 10, 7))
+def holiday_columbus(year: int) -> date:
+    return next_monday(date(year, 10, 7))
 
 
-def holidayveterans(year: int) -> date:
+def holiday_veterans(year: int) -> date:
     nov11 = date(year, 11, 11)
-    if issaturday(nov11):
+    if is_saturday(nov11):
         return date(year, 11, 10)
-    elif issunday(nov11):
+    elif is_sunday(nov11):
         return date(year, 11, 12)
     else:
         return nov11
 
 
-def holidaythanksgiving(year: int) -> date:
-    return nextthursday(date(year, 11, 21))
+def holiday_thanksgiving(year: int) -> date:
+    return next_thursday(date(year, 11, 21))
 
 
-def holidaychristmas(year: int) -> date:
+def holiday_christmas(year: int) -> date:
     dec25 = date(year, 12, 25)
-    if issaturday(dec25):
+    if is_saturday(dec25):
         return date(year, 12, 24)
-    elif issunday(dec25):
+    elif is_sunday(dec25):
         return date(year, 12, 26)
     else:
         return dec25
 
 
-def ismonday(d: date) -> bool: return d.isoweekday() == 1
+def is_monday(d: date) -> bool: return d.isoweekday() == 1
 
 
-def istuesday(d: date) -> bool: return d.isoweekday() == 2
+def is_tuesday(d: date) -> bool: return d.isoweekday() == 2
 
 
-def iswednesday(d: date) -> bool: return d.isoweekday() == 3
+def is_wednesday(d: date) -> bool: return d.isoweekday() == 3
 
 
-def isthursday(d: date) -> bool: return d.isoweekday() == 4
+def is_thursday(d: date) -> bool: return d.isoweekday() == 4
 
 
-def isfriday(d: date) -> bool: return d.isoweekday() == 5
+def is_friday(d: date) -> bool: return d.isoweekday() == 5
 
 
-def issaturday(d: date) -> bool: return d.isoweekday() == 6
+def is_saturday(d: date) -> bool: return d.isoweekday() == 6
 
 
-def issunday(d: date) -> bool: return d.isoweekday() == 7
+def is_sunday(d: date) -> bool: return d.isoweekday() == 7
 
 
-def isweekend(d: date) -> bool: return issaturday(d) or issunday(d)
+def is_weekend(d: date) -> bool: return is_saturday(d) or is_sunday(d)
 
 
-def isweekday(d: date) -> bool: return not isweekend(d)
+def is_weekday(d: date) -> bool: return not is_weekend(d)
 
 
-def isexchangeholiday(d: date) -> bool:
-    return d in exchangeholidays(d.year)
+def is_exchange_holiday(d: date) -> bool:
+    return d in exchange_holidays(d.year)
 
 
-def isnotexchangeholiday(d: date) -> bool:
-    return not isexchangeholiday(d)
+def not_exchange_holiday(d: date) -> bool:
+    return not is_exchange_holiday(d)
 
 
-def isfederalholiday(d: date) -> bool:
-    return d in federalholidays(d.year)
+def is_federal_holiday(d: date) -> bool:
+    return d in federal_holidays(d.year)
 
 
-def isnotfederalholiday(d: date) -> bool:
-    return not isfederalholiday(d)
+def not_federal_holiday(d: date) -> bool:
+    return not is_federal_holiday(d)
 
 
-def istradingday(d: date) -> bool:
-    return not (isweekend(d) or isexchangeholiday(d))
+def is_trading_day(d: date) -> bool:
+    return not (is_weekend(d) or is_exchange_holiday(d))
 
 
-def isnottradingday(d: date) -> bool:
-    return isweekend(d) or isexchangeholiday(d)
+def not_trading_day(d: date) -> bool:
+    return is_weekend(d) or is_exchange_holiday(d)
 
 
-def isweeklyclose(d: date) -> bool:
-    tomorrow = adddays(d, 1)
-    if isfriday(d) and isnotexchangeholiday(d):
+def is_weekly_close(d: date) -> bool:
+    tomorrow = add_days(d, 1)
+    if is_friday(d) and not_exchange_holiday(d):
         return True
-    elif isthursday(d) and isexchangeholiday(tomorrow):
+    elif is_thursday(d) and is_exchange_holiday(tomorrow):
         return True
     else:
         return False
 
 
-def isnotweeklyclose(d: date) -> bool:
-    return not isweeklyclose(d)
+def not_weekly_close(d: date) -> bool:
+    return not is_weekly_close(d)
 
 
-def lastsaturday(d: date) -> date:
+def last_saturday(d: date) -> date:
     n = d.toordinal() % 7 + 1
-    return adddays(d, -n)
+    return add_days(d, -n)
 
 
-def lastfriday(d: date) -> date:
+def last_friday(d: date) -> date:
     n = (d.toordinal() + 1) % 7 + 1
-    return adddays(d, -n)
+    return add_days(d, -n)
 
 
-def lastthursday(d: date) -> date:
+def last_thursday(d: date) -> date:
     n = (d.toordinal() + 2) % 7 + 1
-    return adddays(d, -n)
+    return add_days(d, -n)
 
 
-def lastwednesday(d: date) -> date:
+def last_wednesday(d: date) -> date:
     n = (d.toordinal() + 3) % 7 + 1
-    return adddays(d, -n)
+    return add_days(d, -n)
 
 
-def lasttuesday(d: date) -> date:
+def last_tuesday(d: date) -> date:
     n = (d.toordinal() + 4) % 7 + 1
-    return adddays(d, -n)
+    return add_days(d, -n)
 
 
-def lastmonday(d: date) -> date:
+def last_monday(d: date) -> date:
     n = (d.toordinal() + 5) % 7 + 1
-    return adddays(d, -n)
+    return add_days(d, -n)
 
 
-def lastsunday(d: date) -> date:
+def last_sunday(d: date) -> date:
     n = (d.toordinal() + 6) % 7 + 1
-    return adddays(d, -n)
+    return add_days(d, -n)
 
 
-def nextsunday(d: date) -> date:
+def next_sunday(d: date) -> date:
     n = d.toordinal() % 7
-    return adddays(d, 7 - n)
+    return add_days(d, 7 - n)
 
 
-def nextmonday(d: date) -> date:
+def next_monday(d: date) -> date:
     n = (d.toordinal() - 1) % 7
-    return adddays(d, 7 - n)
+    return add_days(d, 7 - n)
 
 
-def nexttuesday(d: date) -> date:
+def next_tuesday(d: date) -> date:
     n = (d.toordinal() - 2) % 7
-    return adddays(d, 7 - n)
+    return add_days(d, 7 - n)
 
-def nextwednesday(d: date) -> date:
+def next_wednesday(d: date) -> date:
     n = (d.toordinal() - 3) % 7
-    return adddays(d, 7 - n)
+    return add_days(d, 7 - n)
 
 
-def nextthursday(d: date) -> date:
+def next_thursday(d: date) -> date:
     n = (d.toordinal() - 4) % 7
-    return adddays(d, 7 - n)
+    return add_days(d, 7 - n)
 
 
-def nextfriday(d: date) -> date:
+def next_friday(d: date) -> date:
     n = (d.toordinal() - 5) % 7
-    return adddays(d, 7 - n)
+    return add_days(d, 7 - n)
 
 
-def nextsaturday(d: date) -> date:
+def next_saturday(d: date) -> date:
     n = (d.toordinal() - 6) % 7
-    return adddays(d, 7 - n)
+    return add_days(d, 7 - n)
 
 
-def nexttradingday(d: date) -> date:
-    day1 = adddays(d, 1)
-    day2 = adddays(d, 2)
-    day3 = adddays(d, 3)
-    day4 = adddays(d, 4)
-    if istradingday(day1):
+def next_trading_day(d: date) -> date:
+    if is_trading_day(day1 := add_days(d, 1)):
         return day1
-    elif istradingday(day2):
+    elif is_trading_day(day2 := add_days(d, 2)):
         return day2
-    elif istradingday(day3):
+    elif is_trading_day(day3 := add_days(d, 3)):
         return day3
-    else:
+    elif is_trading_day(day4 := add_days(d, 4)):
         return day4
-
-
-def previoustradingday(d: date) -> date:
-    pday1 = adddays(d, -1)
-    pday2 = adddays(d, -2)
-    pday3 = adddays(d, -3)
-    pday4 = adddays(d, -4)
-    if istradingday(pday1):
-        return pday1
-    elif istradingday(pday2):
-        return pday2
-    elif istradingday(pday3):
-        return pday3
     else:
+        return add_days(d, 5)
+
+
+def previous_trading_day(d: date) -> date:
+    if is_trading_day(pday1 := add_days(d, -1)):
+        return pday1
+    elif is_trading_day(pday2 := add_days(d, -2)):
+        return pday2
+    elif is_trading_day(pday3 := add_days(d, -3)):
+        return pday3
+    elif is_trading_day(pday4 := add_days(d, -4)):
         return pday4
+    else:
+        return add_days(d, -5)
 
 
 if __name__ == '__main__':
@@ -311,5 +307,5 @@ if __name__ == '__main__':
     d5a = date(2019,1,11)
     d6a = date(2019,1,12)
     d7a = date(2019,1,13)
-    print(addtradingdays(date(2019,1,1), 250) )
-    print(isexchangeholiday(d1))
+    print(next_trading_day(date(2019, 12, 31)))
+    print(is_exchange_holiday(d1))
