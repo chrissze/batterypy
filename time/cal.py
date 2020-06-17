@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, Dict, List, Optional
 from datetime import date, datetime,timedelta
 
 
@@ -21,6 +21,77 @@ def add_trading_days(d: date, i: int) -> date:
         return day
     else:
         return d
+
+
+def date_range(start: Optional[date] = None, end: Optional[date]=None, period: Optional[int]=None) -> List[date]:
+    result: List[date] = []
+    i: Optional[int] = period
+    d: date = start
+    e: date = end
+
+    if start is not None and end is not None and period is None:
+        if start <= end:
+            while d <= end:
+                result.append(d)
+                d += timedelta(days=1)
+            return result
+        else:
+            return []
+
+    elif start is not None and end is None and period is not None:
+        if period > 0:
+            while i > 0:
+                result.append(d)
+                d += timedelta(days=1)
+                i -= 1
+            return result
+        elif period < 0:
+            while i < 0:
+                result.append(d)
+                d -= timedelta(days=1)
+                i += 1
+            return result
+        else:
+            return []
+    else:
+        return []
+
+
+
+def tdate_range(start: Optional[date] = None, end: Optional[date]=None, period: Optional[int]=None) -> List[date]:
+    result: List[date] = []
+    i: Optional[int] = period
+    d: date = start if is_trading_day(start) else add_trading_days(start, 1)
+    e: date = start if is_trading_day(start) else add_trading_days(start, -1)
+
+    if start is not None and end is not None and period is None:
+        if start <= end:
+            while d <= end:
+                result.append(d)
+                d = add_trading_days(d, 1)
+            return result
+        else:
+            return []
+
+    elif start is not None and end is None and period is not None:
+        if period > 0:
+            while i > 0:
+                result.append(d)
+                d = add_trading_days(d, 1)
+                i -= 1
+            return result
+        elif period < 0:
+            while i < 0:
+                result.append(e)
+                e = add_trading_days(e, -1)
+                i += 1
+            return result
+        else:
+            return []
+    else:
+        return []
+
+
 
 
 def exchange_holidays(year: int) -> List[date]:
@@ -307,5 +378,5 @@ if __name__ == '__main__':
     d5a = date(2019,1,11)
     d6a = date(2019,1,12)
     d7a = date(2019,1,13)
-    print(next_trading_day(date(2019, 12, 31)))
-    print(is_exchange_holiday(d1))
+    ddd = tdate_range(start=d1, period=4)
+    print(ddd)
