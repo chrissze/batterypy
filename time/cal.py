@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Optional
 from datetime import date, datetime,timedelta
+from timeit import default_timer
 
 
 def add_days(d: date, i: int) -> date:
@@ -57,44 +58,24 @@ def date_range(start: Optional[date] = None, end: Optional[date]=None, period: O
 
 
 def tdate_range(start: Optional[date] = None, end: Optional[date]=None, period: Optional[int]=None) -> List[date]:
-    result: List[date] = []
-    i: Optional[int] = period
-    d: date = start if is_trading_day(start) else add_trading_days(start, 1)
-    e: date = start if is_trading_day(start) else add_trading_days(start, -1)
-    if start is not None and end is not None and period is None:
-        if start <= end:
-            while d <= end:
-                result.append(d)
-                d = add_trading_days(d, 1)
-            return result
-        else:
-            return []
-
-    elif start is not None and end is None and period is not None:
-        if period > 0:
-            while i > 0:
-                result.append(d)
-                d = add_trading_days(d, 1)
-                i -= 1
-            return result
-        elif period < 0:
-            while i < 0:
-                result.append(e)
-                e = add_trading_days(e, -1)
-                i += 1
-            return result
-        else:
-            return []
-    else:
-        return []
+    normal = date_range(start=start, end=end, period=period)
+    result = [x for x in normal if is_trading_day(x)]
+    return result
 
 
 def date_length(start: date, end: date) -> int:
-    return len(date_range(start=start, end=end))
+    if end >= start:
+        return len(date_range(start=start, end=end))
 
+    else:
+        return -(len(date_range(start=end, end=start)))
 
 def tdate_length(start: date, end: date) -> int:
-    return len(tdate_range(start=start, end=end))
+    if end >= start:
+        return len(tdate_range(start=start, end=end))
+
+    else:
+        return -(len(tdate_range(start=end, end=start)))
 
 
 def exchange_holidays(year: int) -> List[date]:
@@ -102,10 +83,11 @@ def exchange_holidays(year: int) -> List[date]:
     The NYSE and NASDAQ are open on Veterans Day and Columbus Day (or the day in which they are observed).
     The NYSE and NASDAQ are closed on Good Friday.
     """
+    dec31 = date(year, 12, 31)
     holidays = [holiday_new_years(year), holiday_martin_luther(year), holiday_washington(year),
         holiday_good_friday(year), holiday_memorial(year), holiday_independence(year), holiday_labor(year),
         holiday_thanksgiving(year), holiday_christmas(year)]
-    if is_friday(dec31 := date(year, 12, 31)):
+    if is_friday(dec31):
         return holidays + [dec31]
     else:
         return holidays
@@ -378,19 +360,11 @@ def previous_trading_day(d: date) -> date:
 
 
 if __name__ == '__main__':
-    d1 = date(2018,12,31)
-    d2 = date(2019,1,1)
+    d1 = date(2020,1,1)
+    d2 = date(2020,12,31)
     d3 = date(2019,1,2)
-    d4 = date(2019,1,3)
-    d5 = date(2019,1,4)
-    d6 = date(2019,1,5)
-    d7 = date(2019,1,6)
-    d1a = date(2019,1,7)
-    d2a = date(2019,1,8)
-    d3a = date(2019,1,9)
-    d4a = date(2019,1,10)
-    d5a = date(2019,1,11)
-    d6a = date(2019,1,12)
-    d7a = date(2019,1,13)
-    ddd = date_length(start=d1, end=d2)
-    print(ddd)
+    d4 = date(2019,1,7)
+
+    dd1 = tdate_length(start=d3, end=d4)
+    print(dd1)
+    print(default_timer())
