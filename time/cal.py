@@ -98,7 +98,18 @@ def tdate_length(start: date, end: date) -> int:
 
 
 def exchange_holidays(year: int) -> List[date]:
-    return federal_holidays(year) + [holiday_good_friday(year)]
+    """https://www.investopedia.com/ask/answers/06/stockexchangeclosed.asp
+    The NYSE and NASDAQ are open on Veterans Day and Columbus Day (or the day in which they are observed).
+    The NYSE and NASDAQ are closed on Good Friday.
+    """
+    holidays = [holiday_new_years(year), holiday_martin_luther(year), holiday_washington(year),
+        holiday_good_friday(year), holiday_memorial(year), holiday_independence(year), holiday_labor(year),
+        holiday_thanksgiving(year), holiday_christmas(year)]
+    if is_friday(dec31 := date(year, 12, 31)):
+        return holidays + [dec31]
+    else:
+        return holidays
+
 
 
 def federal_holidays(year: int) -> List[date]:
