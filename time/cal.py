@@ -87,10 +87,13 @@ def exchange_holidays(year: int) -> List[date]:
     holidays = [holiday_new_years(year), holiday_martin_luther(year), holiday_washington(year),
         holiday_good_friday(year), holiday_memorial(year), holiday_independence(year), holiday_labor(year),
         holiday_thanksgiving(year), holiday_christmas(year)]
+    
     if is_friday(dec31):
-        return holidays + [dec31]
-    else:
-        return holidays
+        holidays += [dec31]
+    if year == 2018:
+        holidays += date(2018, 12, 5)
+    
+    return holidays
 
 
 
