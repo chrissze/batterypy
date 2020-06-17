@@ -27,8 +27,6 @@ def date_range(start: Optional[date] = None, end: Optional[date]=None, period: O
     result: List[date] = []
     i: Optional[int] = period
     d: date = start
-    e: date = end
-
     if start is not None and end is not None and period is None:
         if start <= end:
             while d <= end:
@@ -63,7 +61,6 @@ def tdate_range(start: Optional[date] = None, end: Optional[date]=None, period: 
     i: Optional[int] = period
     d: date = start if is_trading_day(start) else add_trading_days(start, 1)
     e: date = start if is_trading_day(start) else add_trading_days(start, -1)
-
     if start is not None and end is not None and period is None:
         if start <= end:
             while d <= end:
@@ -92,6 +89,12 @@ def tdate_range(start: Optional[date] = None, end: Optional[date]=None, period: 
         return []
 
 
+def date_length(start: date, end: date) -> int:
+    return len(date_range(start=start, end=end))
+
+
+def tdate_length(start: date, end: date) -> int:
+    return len(tdate_range(start=start, end=end))
 
 
 def exchange_holidays(year: int) -> List[date]:
@@ -378,5 +381,5 @@ if __name__ == '__main__':
     d5a = date(2019,1,11)
     d6a = date(2019,1,12)
     d7a = date(2019,1,13)
-    ddd = tdate_range(start=d1, period=4)
+    ddd = date_length(start=d1, end=d2)
     print(ddd)
