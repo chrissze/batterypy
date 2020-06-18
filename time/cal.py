@@ -82,6 +82,12 @@ def exchange_holidays(year: int) -> List[date]:
     """https://www.investopedia.com/ask/answers/06/stockexchangeclosed.asp
     The NYSE and NASDAQ are open on Veterans Day and Columbus Day (or the day in which they are observed).
     The NYSE and NASDAQ are closed on Good Friday.
+    2001-09-11 911
+    2001-09-12 911
+    2001-09-13 911
+    2001-09-14 911
+    2007-01-02 Mourning for President Ford
+    *2010-12-31 open for year-end accounting, though it is federal holiday
     2012-10-29 Hurricane Sandy
     2012-10-30 Hurricane Sandy
     2018-12-05 George H W Bush
@@ -90,11 +96,16 @@ def exchange_holidays(year: int) -> List[date]:
     holidays = [holiday_new_years(year), holiday_martin_luther(year), holiday_washington(year),
         holiday_good_friday(year), holiday_memorial(year), holiday_independence(year), holiday_labor(year),
         holiday_thanksgiving(year), holiday_christmas(year)]
+
+    if year == 2001:
+        holidays += [date(2001, 9, 11), date(2001, 9, 12), date(2001, 9, 13), date(2001, 9, 14)]
+    if year == 2007:
+        holidays += [date(2007, 1, 2)]
     if year == 2012:
         holidays += [date(2012, 10, 29), date(2012, 10, 30)]
     if year == 2018:
         holidays += [date(2018, 12, 5)]
-    if is_friday(dec31):
+    if is_friday(dec31) and year != 2010:
         holidays += [dec31]
     return holidays
 
