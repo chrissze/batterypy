@@ -29,11 +29,6 @@ def formatlarge(n: Union[int,float]) -> str:
     return result
 
 
-
-
-
-
-
 def is_floatable(s: Any) -> bool:
     s0: str = str(s)
     s1: str = s0.strip() # remove all leading and trailing spaces
@@ -47,7 +42,8 @@ def readfloat(s: Any) -> Optional[float]:
 
 
 def readf(s: Any) -> Optional[float]:
-    x = re.sub('[,+%$¢£¥€]', '', str(s))
+    s0: str = s[:-1] if len(s) > 0 and s[-1] == '.' else s
+    x = re.sub('[,+%$¢£¥€]', '', str(s0))
     return float(x) if is_floatable(x) else None
 
 
@@ -96,8 +92,8 @@ def int0(s: str) -> int:
 
 
 if __name__ == '__main__':
-    x = ' 6.55555 '
-    y = formatlarge(987000000000000)
+    xxx = ''
+    y = readf(xxx)
     print(y)
 
 
