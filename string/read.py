@@ -42,9 +42,10 @@ def readfloat(s: Any) -> Optional[float]:
 
 
 def readf(s: Any) -> Optional[float]:
-    s0: str = s[:-1] if len(s) > 0 and s[-1] == '.' else s
-    x = re.sub('[,+%$¢£¥€]', '', str(s0))
-    return float(x) if is_floatable(x) else None
+    s0: str = str(s)
+    s1: str = s0[:-1] if len(s0) > 0 and s0[-1] == '.' else s0
+    s2: str = re.sub('[,+%$¢£¥€]', '', s1)
+    return float(s2) if is_floatable(s2) else None
 
 
 def float0(s: Any) -> float:
