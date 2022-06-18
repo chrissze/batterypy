@@ -65,5 +65,17 @@ def last(lst: List[Any]) -> Optional[Any]:
         return lst[-1]
     else:
         return None
+    
+def drop (drop: int, lst: List[Any]) -> List[Any]:
+    return lst[drop:]
+
+def drop_take (drop: int, take: int, lst: List[Any]) -> List[Any]:
+    list1 = lst[drop:]
+    list2 = list1[:take]
+    return list2
+
+
+def take (take: int, lst: List[Any]) -> List[Any]:
+    return lst[:take]
 
 
