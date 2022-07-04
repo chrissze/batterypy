@@ -22,6 +22,11 @@ z = Infix(lambda xs,i: xs[i] if abs(i) < (l := len(xs)) or -i == l else None)
 
 
 
+def chunks_of(size: int, lst: List[Any]) -> List[List[Any]]:
+    list_of_list: List[List[Any] =  [lst[i:i+size] for i in range(0, len(lst), size)]   
+    return list_of_list
+
+
 # xs can be list or tuple
 def grab(xs, i:int) -> Optional[Any]:
     if abs(i) < (l := len(xs)) or -i == l :
