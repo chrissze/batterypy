@@ -1,9 +1,12 @@
-"""
+'''
+
+I CANNOT use try.py as a name for this module, it will have errors when I tried to import a module named 'try'.
+
 https://www.w3schools.com/python/python_try_except.asp
 
 https://stackoverflow.com/questions/2083987/how-to-retry-after-exception
 
-"""
+'''
 
 # STANDARD LIBS
 from typing import Any, List, Optional
@@ -12,6 +15,8 @@ def try_none(func, *args, **kwargs) -> None:
     '''
     This function is a wrapper, it is suitbale for functions that returns None.
     If the function returns a Value, better to manually construct a try function.
+
+    Both try and except blocks will implicitly return None.
 
     when I print arguments and keyword arguments in except block, 
     args without preceding star is a tuple, 
@@ -23,21 +28,24 @@ def try_none(func, *args, **kwargs) -> None:
     Error example:
         trys(print, 'cats', en='\n\n\n')
         trys(print( cats en )) ERROR: 'en' is an invalid keyword argument for print()
+    
+    
     '''
     try:
         func(*args, **kwargs)
     except Exception as error:
         print(f'try_none({func.__name__}) ERROR: {error}')
-        return None
 
 def try_str(func, *args, **kwargs) -> str:
     '''
+    I MUST add 'return' keyword in the try block, otherwise, this function will return None.
+
     This function is a wrapper, it is suitbale for functions that returns a string.
 
     Please note that the return value of the except block is also a string.
     '''
     try:
-        func(*args, **kwargs)
+        return func(*args, **kwargs)
     except Exception as error:
         return f'try_str({func.__name__}) ERROR: {error}'
 
@@ -48,11 +56,13 @@ def try_str(func, *args, **kwargs) -> str:
 
 def try_float(func, *args, **kwargs) -> float:
     '''
+    I MUST add 'return' keyword in the try block, otherwise, this function will return None.
+
     This function is a wrapper, it is suitbale for functions that returns a float.
 
     '''
     try:
-        func(*args, **kwargs)
+        return func(*args, **kwargs)
     except Exception as error:
         print(f'try_float({func.__name__}) ERROR: {error}')
         return -1.0
@@ -61,11 +71,13 @@ def try_float(func, *args, **kwargs) -> float:
 
 def try_optional_float(func, *args, **kwargs) -> Optional[float]:
     '''
-    This function is a wrapper, it is suitbale for functions that returns an optional float.
+    I MUST add 'return' keyword in the try block, otherwise, this function will return None.
 
+    This function is a wrapper, it is suitbale for functions that returns an optional float.
     '''
     try:
-        func(*args, **kwargs)
+        return func(*args, **kwargs)
+        
     except Exception as error:
         print(f'try_optional_float({func.__name__}) ERROR: {error}')
         return None
@@ -77,7 +89,7 @@ def try_int(func, *args, **kwargs) -> int:
 
     '''
     try:
-        func(*args, **kwargs)
+        return func(*args, **kwargs)
     except Exception as error:
         print(f'try_int({func.__name__}) ERROR: {error}')
         return -1
@@ -90,7 +102,7 @@ def try_optional_int(func, *args, **kwargs) -> Optional[int]:
 
     '''
     try:
-        func(*args, **kwargs)
+        return func(*args, **kwargs)
     except Exception as error:
         print(f'try_optional_int({func.__name__}) ERROR: {error}')
         return None
@@ -106,7 +118,7 @@ def try_list(func, *args, **kwargs) -> List[Any]:
 
     '''
     try:
-        func(*args, **kwargs)
+        return func(*args, **kwargs)
     except Exception as error:
         print(f'try_int({func.__name__}) ERROR: {error}')
         return []
@@ -116,6 +128,8 @@ def try_for(times, func, *args, **kwargs) -> None:
     '''
     This try_for function is a wrapper, it is suitbale for functions that returns None.
     If the function returns a Value, it is best to manually construct the try function.
+
+    Both try and except blocks will implicitly return None.
 
     Run a function multiple times in a try block, 
     Python does not allow putting times argument after **kwargs
