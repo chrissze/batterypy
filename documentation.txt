@@ -1,0 +1,15 @@
+
+
+
+
+
+
+
+
+
+
+
+
+INTRODUCTION
+Python is a battery-included language because it has a wide range of functions in the standard libray. This batterypy library provides extra functionalities that depends on the standard library only.
+
