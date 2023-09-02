@@ -8,6 +8,9 @@ https://stackoverflow.com/questions/2083987/how-to-retry-after-exception
 
 def trys(func, *args, **kwargs):
     '''
+    This trys function is a wrapper, it is suitbale for functions that returns None.
+    If the function returns a Value, it is best to manually construct the try function.
+
     when I print arguments and keyword arguments in except block, 
     args without preceding star is a tuple, 
     kwargs without preceding single star is a dictionary.
@@ -28,6 +31,9 @@ def trys(func, *args, **kwargs):
 
 def try_for(times, func, *args, **kwargs):
     '''
+    This try_for function is a wrapper, it is suitbale for functions that returns None.
+    If the function returns a Value, it is best to manually construct the try function.
+
     Run a function multiple times in a try block, 
     Python does not allow putting times argument after **kwargs
     Successful example:
