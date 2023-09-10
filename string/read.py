@@ -37,6 +37,9 @@ def is_floatable(s: Any) -> bool:
     s3: str = s2.replace('.', '', 1) # get rid of one dot
     return s3.isdecimal()
 
+
+
+
 def readfloat(s: Any) -> Optional[float]:
     return float(s) if is_floatable(s) else None
 
@@ -90,6 +93,22 @@ def int0(s: str) -> int:
     return int(x) if is_intable(x) else 0
 
 
+
+
+def format_number_with_commas(x) -> Any:
+    """
+    DEPENDS ON: is_floatable()
+
+    Formats numbers with commas as thousand separators.
+
+    I can use this function to format DataFrame numbers to have thousand separators.
+
+        df.applymap(format_number_with_commas)   # no need to write ()
+    """
+    if is_floatable(x): 
+        return f'{x:,}'
+    else:
+        return x
 
 
 if __name__ == '__main__':
