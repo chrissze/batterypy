@@ -316,9 +316,74 @@ def last_sunday(d: date) -> date:
     return add_days(d, -n)
 
 
+def this_sunday(d: date) -> date:
+    """
+    If the input date d is a Sunday, return the input date, otherwise return the coming Sunday.
+    
+    .weekday()    Mon is 0, Sun is 6
+    """
+    days_until_sunday = 6 - d.weekday()  # Days from current day to Sunday
+    return d + timedelta(days=days_until_sunday)
+
+
+def this_monday(d: date) -> date:
+    """
+    if d is a Monday, return d.
+    """
+    days_until_monday = (7 - d.weekday()) % 7 
+    return d + timedelta(days=days_until_monday)
+
+def this_tuesday(d: date) -> date:
+    """
+    if d is a Tuesday, return d.
+    """
+    days_until_tuesday = (8 - d.weekday()) % 7 
+    return d + timedelta(days=days_until_tuesday)
+
+
+def this_wednesday(d: date) -> date:
+    """
+    if d is a Wednesday, return d.
+    """
+    days_until_wednesday = (9 - d.weekday()) % 7 
+    return d + timedelta(days=days_until_wednesday)
+
+def this_thursday(d: date) -> date:
+    """
+    if d is a Thursday, return d.
+    """
+    days_until_thursday = (10 - d.weekday()) % 7 
+    return d + timedelta(days=days_until_thursday)
+
+
+def this_friday(d: date) -> date:
+    """
+    if d is a Friday, return d.
+    """
+    days_until_friday = (11 - d.weekday()) % 7 
+    return d + timedelta(days=days_until_friday)
+
+
+def this_saturday(d: date) -> date:
+    """
+    if d is a Saturday, return d.
+    """
+    days_until_saturday = (12 - d.weekday()) % 7 
+    return d + timedelta(days=days_until_saturday)
+
+
+
 def next_sunday(d: date) -> date:
-    n = d.toordinal() % 7
-    return add_days(d, 7 - n)
+    """
+    If d is Sunday, return d + 7
+
+    If d is Sunday, d.toordinal() % 7 is 0
+
+    Alternative syntax:
+    days_until_sunday = 7 - (d.toordinal() % 7)
+    """
+    days_until_sunday = (13 - d.weekday()) % 7
+    return d + timedelta(days=days_until_sunday)
 
 
 def next_monday(d: date) -> date:
