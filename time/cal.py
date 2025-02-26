@@ -15,6 +15,8 @@ from email.utils import parsedate_to_datetime
 def get_hk_date() -> Optional[date]:
     """
     Get HK date by internet
+
+    returns None when there are http errors or no internet connection at the host.
     """
     websites = [
         'https://google.com',
