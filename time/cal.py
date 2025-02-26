@@ -1,6 +1,52 @@
+
 from typing import Any, Dict, List, Optional
-from datetime import date, datetime,timedelta
+
+from datetime import date, datetime, timedelta, timezone
+
 from timeit import default_timer
+
+from urllib.request import Request, urlopen
+
+from urllib.error import URLError, HTTPError
+
+from email.utils import parsedate_to_datetime
+
+
+def get_hk_date() -> Optional[date]:
+    """
+    Get HK date by internet
+    """
+    websites = [
+        'https://google.com',
+        'https://cloudflare.com',
+        'https://www.apple.com'
+    ]
+
+    for url in websites:
+        try:
+            req = Request(url=url, method='HEAD', headers={'User-Agent': 'Mozilla/5.0'})
+            
+            with urlopen(req, timeout=5) as response:
+                #print(f'\n\n\n {url=} {response.headers} \n\n\n')
+                if 'Date' not in response.headers:
+                    continue
+                
+                gmt_time = parsedate_to_datetime(response.headers['Date'])
+                
+                hk_tz = timezone(timedelta(hours=8))
+                
+                hk_time = gmt_time.astimezone(hk_tz)
+                
+                hk_date = hk_time.date()
+
+                return hk_date
+
+        except (URLError, HTTPError) as e:
+            continue
+        except Exception as e:
+            continue
+    return None
+
 
 
 def add_days(d: date, i: int) -> date:
