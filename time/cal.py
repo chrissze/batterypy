@@ -5,16 +5,49 @@ from datetime import date, datetime, timedelta, timezone
 
 from timeit import default_timer
 
-from urllib.request import Request, urlopen
 
-from urllib.error import URLError, HTTPError
 
+
+
+from datetime import date, datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
-
-
-def get_hk_date() -> Optional[date]:
+from typing import Optional
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
+def get_gmt_datetime(url: str) -> datetime:
     """
-    Get HK date by internet
+    INDEPENDENT
+    Get GMT datetime by internet
+    """
+    req = Request(url=url, method='HEAD', headers={'User-Agent': 'Mozilla/5.0'})
+    with urlopen(req, timeout=5) as response:
+        if 'Date' not in response.headers:
+            raise Exception('Date is not in response.headers')
+        gmt_datetime = parsedate_to_datetime(response.headers['Date'])
+        return gmt_datetime
+
+
+
+def get_hk_date(url: str) -> date:
+    """
+    DEPENDS: get_gmt_datetime
+    Get HK 'date' by internet
+    """
+
+    gmt_datetime = get_gmt_datetime(url)
+    
+    hk_tz = timezone(timedelta(hours=8))
+    
+    hk_datetime = gmt_datetime.astimezone(hk_tz)
+    
+    hk_date = hk_datetime.date()
+
+    return hk_date
+
+
+def getting_hk_date() -> Optional[date]:
+    """
+    DEPENDS: get_gmt_datetime, get_hk_date
 
     returns None when there are http errors or no internet connection at the host.
     """
@@ -26,28 +59,13 @@ def get_hk_date() -> Optional[date]:
 
     for url in websites:
         try:
-            req = Request(url=url, method='HEAD', headers={'User-Agent': 'Mozilla/5.0'})
-            
-            with urlopen(req, timeout=5) as response:
-                #print(f'\n\n\n {url=} {response.headers} \n\n\n')
-                if 'Date' not in response.headers:
-                    continue
-                
-                gmt_time = parsedate_to_datetime(response.headers['Date'])
-                
-                hk_tz = timezone(timedelta(hours=8))
-                
-                hk_time = gmt_time.astimezone(hk_tz)
-                
-                hk_date = hk_time.date()
-
-                return hk_date
-
+            return get_hk_date(url)
         except (URLError, HTTPError) as e:
             continue
         except Exception as e:
             continue
     return None
+
 
 
 
