@@ -27,7 +27,6 @@ def get_gmt_datetime(url: str) -> datetime:
         return gmt_datetime
 
 
-
 def get_hk_date(url: str) -> date:
     """
     DEPENDS: get_gmt_datetime
@@ -384,6 +383,8 @@ def last_sunday(d: date) -> date:
 
 def this_sunday(d: date) -> date:
     """
+    INDEPENDENT
+
     If the input date d is a Sunday, return the input date, otherwise return the coming Sunday.
     
     .weekday()    Mon is 0, Sun is 6
