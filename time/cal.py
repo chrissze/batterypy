@@ -1,12 +1,7 @@
 
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 from datetime import date, datetime, timedelta, timezone
-
-from timeit import default_timer
-
-
-
 
 
 from datetime import date, datetime, timedelta, timezone
@@ -14,6 +9,118 @@ from email.utils import parsedate_to_datetime
 from typing import Optional
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
+
+
+
+
+def add_days(d: date, i: int) -> date:
+    return d + timedelta(days=i)
+
+
+def add_trading_days(d: date, i: int) -> date:
+    n = i
+    day = d
+    if i > 0:
+        while n > 0:
+            day = next_trading_day(day)
+            n -= 1
+        return day
+    elif i < 0:
+        while n < 0:
+            day = previous_trading_day(day)
+            n += 1
+        return day
+    else:
+        return d
+
+
+def date_length(start: date, end: date) -> int:
+    if end >= start:
+        return len(date_range(start=start, end=end))
+
+    else:
+        return -(len(date_range(start=end, end=start)))
+
+
+def date_range(start: Optional[date] = None, end: Optional[date]=None, period: Optional[int]=None) -> list[date]:
+    result: list[date] = []
+    i: Optional[int] = period
+    d: date = start
+    if start is not None and end is not None and period is None:
+        if start <= end:
+            while d <= end:
+                result.append(d)
+                d += timedelta(days=1)
+            return result
+        else:
+            return []
+
+    elif start is not None and end is None and period is not None:
+        if period > 0:
+            while i > 0:
+                result.append(d)
+                d += timedelta(days=1)
+                i -= 1
+            return result
+        elif period < 0:
+            while i < 0:
+                result.append(d)
+                d -= timedelta(days=1)
+                i += 1
+            return result
+        else:
+            return []
+    else:
+        return []
+
+
+def exchange_holidays(year: int) -> list[date]:
+    """https://www.investopedia.com/ask/answers/06/stockexchangeclosed.asp
+    The NYSE and NASDAQ are open on Veterans Day and Columbus Day (or the day in which they are observed).
+    The NYSE and NASDAQ are closed on Good Friday.
+    2001-09-11 911
+    2001-09-12 911
+    2001-09-13 911
+    2001-09-14 911
+    2007-01-02 Mourning for President Ford
+    *2010-12-31 open for year-end accounting, though it is federal holiday
+    2012-10-29 Hurricane Sandy
+    2012-10-30 Hurricane Sandy
+    2018-12-05 George H W Bush
+    """
+    dec31 = date(year, 12, 31)
+    holidays = [holiday_new_years(year), holiday_martin_luther(year), holiday_washington(year),
+        holiday_good_friday(year), holiday_memorial(year), holiday_independence(year), holiday_labor(year),
+        holiday_thanksgiving(year), holiday_christmas(year)]
+
+    if year == 2001:
+        holidays += [date(2001, 9, 11), date(2001, 9, 12), date(2001, 9, 13), date(2001, 9, 14)]
+    if year == 2007:
+        holidays += [date(2007, 1, 2)]
+    if year == 2012:
+        holidays += [date(2012, 10, 29), date(2012, 10, 30)]
+    if year == 2018:
+        holidays += [date(2018, 12, 5)]
+    if is_friday(dec31) and year != 2010:
+        holidays += [dec31]
+    return holidays
+
+
+
+def federal_holidays(year: int) -> list[date]:
+    # Federal holidays do not include Easter
+    # New Years Day might be Saturday and falls into 31 Dec, see year 2010
+    # https://www.opm.gov/policy-data-oversight/snow-dismissal-procedures/federal-holidays/
+    dec31 = date(year, 12, 31)
+    holidays = [holiday_new_years(year), holiday_martin_luther(year), holiday_washington(year)
+            , holiday_memorial(year), holiday_independence(year), holiday_labor(year)
+            , holiday_columbus(year), holiday_veterans(year), holiday_thanksgiving(year), holiday_christmas(year)]
+    if is_friday(dec31):
+        return holidays + [dec31]
+    else:
+        return holidays
+
+
 def get_gmt_datetime(url: str) -> datetime:
     """
     INDEPENDENT
@@ -68,126 +175,35 @@ def getting_hk_date() -> Optional[date]:
 
 
 
-def add_days(d: date, i: int) -> date:
-    return d + timedelta(days=i)
-
-
-def add_trading_days(d: date, i: int) -> date:
-    n = i
-    day = d
-    if i > 0:
-        while n > 0:
-            day = next_trading_day(day)
-            n -= 1
-        return day
-    elif i < 0:
-        while n < 0:
-            day = previous_trading_day(day)
-            n += 1
-        return day
-    else:
-        return d
-
-
-def date_range(start: Optional[date] = None, end: Optional[date]=None, period: Optional[int]=None) -> List[date]:
-    result: List[date] = []
-    i: Optional[int] = period
-    d: date = start
-    if start is not None and end is not None and period is None:
-        if start <= end:
-            while d <= end:
-                result.append(d)
-                d += timedelta(days=1)
-            return result
-        else:
-            return []
-
-    elif start is not None and end is None and period is not None:
-        if period > 0:
-            while i > 0:
-                result.append(d)
-                d += timedelta(days=1)
-                i -= 1
-            return result
-        elif period < 0:
-            while i < 0:
-                result.append(d)
-                d -= timedelta(days=1)
-                i += 1
-            return result
-        else:
-            return []
-    else:
-        return []
-
-
-
-def tdate_range(start: Optional[date] = None, end: Optional[date]=None, period: Optional[int]=None) -> List[date]:
-    normal = date_range(start=start, end=end, period=period)
-    result = [x for x in normal if is_trading_day(x)]
-    return result
-
-
-def date_length(start: date, end: date) -> int:
-    if end >= start:
-        return len(date_range(start=start, end=end))
-
-    else:
-        return -(len(date_range(start=end, end=start)))
-
-def tdate_length(start: date, end: date) -> int:
-    if end >= start:
-        return len(tdate_range(start=start, end=end))
-
-    else:
-        return -(len(tdate_range(start=end, end=start)))
-
-
-def exchange_holidays(year: int) -> List[date]:
-    """https://www.investopedia.com/ask/answers/06/stockexchangeclosed.asp
-    The NYSE and NASDAQ are open on Veterans Day and Columbus Day (or the day in which they are observed).
-    The NYSE and NASDAQ are closed on Good Friday.
-    2001-09-11 911
-    2001-09-12 911
-    2001-09-13 911
-    2001-09-14 911
-    2007-01-02 Mourning for President Ford
-    *2010-12-31 open for year-end accounting, though it is federal holiday
-    2012-10-29 Hurricane Sandy
-    2012-10-30 Hurricane Sandy
-    2018-12-05 George H W Bush
+def get_third_friday(months: int, base_date: date | None = None):
     """
-    dec31 = date(year, 12, 31)
-    holidays = [holiday_new_years(year), holiday_martin_luther(year), holiday_washington(year),
-        holiday_good_friday(year), holiday_memorial(year), holiday_independence(year), holiday_labor(year),
-        holiday_thanksgiving(year), holiday_christmas(year)]
+    DEPENDS: next_friday
 
-    if year == 2001:
-        holidays += [date(2001, 9, 11), date(2001, 9, 12), date(2001, 9, 13), date(2001, 9, 14)]
-    if year == 2007:
-        holidays += [date(2007, 1, 2)]
-    if year == 2012:
-        holidays += [date(2012, 10, 29), date(2012, 10, 30)]
-    if year == 2018:
-        holidays += [date(2018, 12, 5)]
-    if is_friday(dec31) and year != 2010:
-        holidays += [dec31]
-    return holidays
+    
+    EXAMPLES:
+    d1: date = date(2027, 12, 1)
+    friday: str = get_third_friday(1, d1).strftime("%Y%m%d")
+    print(friday)  # '20280121'
+
+    NOTES: 
+    
+    Do not put base_date=date.today() into default keyword argument, otherwise, every time I import the module, today() will get pull. Set default to None so that today will be computed only on call.
+
+    // is floor division.
+    """
+    if base_date is None:
+        base_date = date.today()
+
+    year = base_date.year + (base_date.month + months - 1) // 12
+
+    month = (base_date.month + months - 1) % 12 + 1
+
+    third_friday = next_friday(date(year, month, 14))
+
+    return third_friday
 
 
 
-def federal_holidays(year: int) -> List[date]:
-    # Federal holidays do not include Easter
-    # New Years Day might be Saturday and falls into 31 Dec, see year 2010
-    # https://www.opm.gov/policy-data-oversight/snow-dismissal-procedures/federal-holidays/
-    dec31 = date(year, 12, 31)
-    holidays = [holiday_new_years(year), holiday_martin_luther(year), holiday_washington(year)
-            , holiday_memorial(year), holiday_independence(year), holiday_labor(year)
-            , holiday_columbus(year), holiday_veterans(year), holiday_thanksgiving(year), holiday_christmas(year)]
-    if is_friday(dec31):
-        return holidays + [dec31]
-    else:
-        return holidays
 
 
 def get_trading_day() -> date:
@@ -312,24 +328,11 @@ def is_exchange_holiday(d: date) -> bool:
     return d in exchange_holidays(d.year)
 
 
-def not_exchange_holiday(d: date) -> bool:
-    return not is_exchange_holiday(d)
-
-
 def is_federal_holiday(d: date) -> bool:
     return d in federal_holidays(d.year)
 
-
-def not_federal_holiday(d: date) -> bool:
-    return not is_federal_holiday(d)
-
-
 def is_trading_day(d: date) -> bool:
     return not (is_weekend(d) or is_exchange_holiday(d))
-
-
-def not_trading_day(d: date) -> bool:
-    return is_weekend(d) or is_exchange_holiday(d)
 
 
 def is_weekly_close(d: date) -> bool:
@@ -342,8 +345,6 @@ def is_weekly_close(d: date) -> bool:
         return False
 
 
-def not_weekly_close(d: date) -> bool:
-    return not is_weekly_close(d)
 
 
 def last_saturday(d: date) -> date:
@@ -379,6 +380,118 @@ def last_monday(d: date) -> date:
 def last_sunday(d: date) -> date:
     n = (d.toordinal() + 6) % 7 + 1
     return add_days(d, -n)
+
+
+
+
+
+def next_sunday(d: date) -> date:
+    """
+    If d is Sunday, return d + 7
+
+    If d is Sunday, d.toordinal() % 7 is 0
+
+    Alternative syntax:
+    days_until_sunday = 7 - (d.toordinal() % 7)
+    """
+    days_until_sunday = (13 - d.weekday()) % 7
+    return d + timedelta(days=days_until_sunday)
+
+
+def next_monday(d: date) -> date:
+    n = (d.toordinal() - 1) % 7
+    return d + timedelta(days = 7 - n)
+
+
+def next_tuesday(d: date) -> date:
+    n = (d.toordinal() - 2) % 7
+    return d + timedelta(days = 7 - n)
+
+def next_wednesday(d: date) -> date:
+    n = (d.toordinal() - 3) % 7
+    return d + timedelta(days = 7 - n)
+
+
+def next_thursday(d: date) -> date:
+    n = (d.toordinal() - 4) % 7
+    return d + timedelta(days = 7 - n)
+
+
+def next_friday(d: date) -> date:
+    """
+    USED BY: get_third_friday
+
+    """
+    n = (d.toordinal() - 5) % 7
+    return d + timedelta(days = 7 - n)
+
+
+def next_saturday(d: date) -> date:
+    n = (d.toordinal() - 6) % 7
+    return d + timedelta(days = 7 - n)
+    
+
+
+def next_trading_day(d: date) -> date:
+    if is_trading_day(day1 := add_days(d, 1)):
+        return day1
+    elif is_trading_day(day2 := add_days(d, 2)):
+        return day2
+    elif is_trading_day(day3 := add_days(d, 3)):
+        return day3
+    elif is_trading_day(day4 := add_days(d, 4)):
+        return day4
+    else:
+        return add_days(d, 5)
+
+
+def not_exchange_holiday(d: date) -> bool:
+    return not is_exchange_holiday(d)
+
+
+
+def not_federal_holiday(d: date) -> bool:
+    return not is_federal_holiday(d)
+
+
+
+
+def not_trading_day(d: date) -> bool:
+    return is_weekend(d) or is_exchange_holiday(d)
+
+
+def not_weekly_close(d: date) -> bool:
+    return not is_weekly_close(d)
+
+
+def previous_trading_day(d: date) -> date:
+    if is_trading_day(pday1 := add_days(d, -1)):
+        return pday1
+    elif is_trading_day(pday2 := add_days(d, -2)):
+        return pday2
+    elif is_trading_day(pday3 := add_days(d, -3)):
+        return pday3
+    elif is_trading_day(pday4 := add_days(d, -4)):
+        return pday4
+    else:
+        return add_days(d, -5)
+
+
+
+
+
+def tdate_range(start: Optional[date] = None, end: Optional[date]=None, period: Optional[int]=None) -> list[date]:
+    normal = date_range(start=start, end=end, period=period)
+    result = [x for x in normal if is_trading_day(x)]
+    return result
+
+
+def tdate_length(start: date, end: date) -> int:
+    if end >= start:
+        return len(tdate_range(start=start, end=end))
+
+    else:
+        return -(len(tdate_range(start=end, end=start)))
 
 
 def this_sunday(d: date) -> date:
@@ -440,80 +553,8 @@ def this_saturday(d: date) -> date:
 
 
 
-def next_sunday(d: date) -> date:
-    """
-    If d is Sunday, return d + 7
-
-    If d is Sunday, d.toordinal() % 7 is 0
-
-    Alternative syntax:
-    days_until_sunday = 7 - (d.toordinal() % 7)
-    """
-    days_until_sunday = (13 - d.weekday()) % 7
-    return d + timedelta(days=days_until_sunday)
-
-
-def next_monday(d: date) -> date:
-    n = (d.toordinal() - 1) % 7
-    return add_days(d, 7 - n)
-
-
-def next_tuesday(d: date) -> date:
-    n = (d.toordinal() - 2) % 7
-    return add_days(d, 7 - n)
-
-def next_wednesday(d: date) -> date:
-    n = (d.toordinal() - 3) % 7
-    return add_days(d, 7 - n)
-
-
-def next_thursday(d: date) -> date:
-    n = (d.toordinal() - 4) % 7
-    return add_days(d, 7 - n)
-
-
-def next_friday(d: date) -> date:
-    n = (d.toordinal() - 5) % 7
-    return add_days(d, 7 - n)
-
-
-def next_saturday(d: date) -> date:
-    n = (d.toordinal() - 6) % 7
-    return add_days(d, 7 - n)
-
-
-def next_trading_day(d: date) -> date:
-    if is_trading_day(day1 := add_days(d, 1)):
-        return day1
-    elif is_trading_day(day2 := add_days(d, 2)):
-        return day2
-    elif is_trading_day(day3 := add_days(d, 3)):
-        return day3
-    elif is_trading_day(day4 := add_days(d, 4)):
-        return day4
-    else:
-        return add_days(d, 5)
-
-
-def previous_trading_day(d: date) -> date:
-    if is_trading_day(pday1 := add_days(d, -1)):
-        return pday1
-    elif is_trading_day(pday2 := add_days(d, -2)):
-        return pday2
-    elif is_trading_day(pday3 := add_days(d, -3)):
-        return pday3
-    elif is_trading_day(pday4 := add_days(d, -4)):
-        return pday4
-    else:
-        return add_days(d, -5)
-
-
 if __name__ == '__main__':
-    d1 = date(2020,1,1)
-    d2 = date(2020,12,31)
-    d3 = date(2019,1,2)
-    d4 = date(2019,1,7)
 
-    dd1 = tdate_length(start=d3, end=d4)
-    print(dd1)
-    print(default_timer())
+    d1 = date(2027, 12, 1)
+    friday = get_third_friday(1, d1).strftime("%Y%m%d")
+    print(friday)  # '20280121'

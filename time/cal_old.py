@@ -509,12 +509,28 @@ def previous_trading_day(d: date) -> date:
 
 
 
+def get_third_friday(months: int, base_date: date | None = None):
+    """
+    DEPENDS ON: next_friday
 
-def get_third_friday(next: int, base_date: date=date.today()):
+    
+    EXAMPLES:
+        d1 = date(2027, 12, 1)
+        friday = get_third_friday(1, d1).strftime("%Y%m%d")
+        print(friday)  # '20280121'
 
-    year = base_date.year + (base_date.month + next - 1) // 12
+    NOTES: 
+    
+    Do not put base_date=date.today() into default keyword argument, otherwise, every time I import the module, today() will get pull. Set default to None so that today will be computed only on call.
 
-    month = (base_date.month + next - 1) % 12 + 1
+    // is floor division.
+    """
+    if base_date is None:
+        base_date = date.today()
+
+    year = base_date.year + (base_date.month + months - 1) // 12
+
+    month = (base_date.month + months - 1) % 12 + 1
 
     third_friday = next_friday(date(year, month, 14))
 
@@ -524,11 +540,10 @@ def get_third_friday(next: int, base_date: date=date.today()):
 
 
 if __name__ == '__main__':
-    d1 = date(2020,1,1)
-    d2 = date(2020,12,31)
-    d3 = date(2019,1,2)
-    d4 = date(2019,1,7)
+    d1 = date(2027,12,1)
 
-    get_third_friday(2)
+    friday = get_third_friday(1, d1)
+    friday_str = friday.strftime("%Y%m%d")
 
-   
+    
+    print(friday_str)
