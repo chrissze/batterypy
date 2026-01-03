@@ -30,6 +30,13 @@ def formatlarge(n: Union[int,float]) -> str:
 
 
 def is_floatable(s: Any) -> bool:
+    """
+    .isdecimal
+        https://docs.python.org/3/library/stdtypes.html#str.isdecimal
+
+        Return True if all characters in the string are decimal characters and there is at least one character, False otherwise.
+
+    """
     s0: str = str(s)
     s1: str = s0.strip() # remove all leading and trailing spaces
     is_neg_str: bool = s1[:1] == '-'
