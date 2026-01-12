@@ -75,35 +75,49 @@ def date_range(start: Optional[date] = None, end: Optional[date]=None, period: O
 
 
 def exchange_holidays(year: int) -> list[date]:
-    """https://www.investopedia.com/ask/answers/06/stockexchangeclosed.asp
+    """
+    https://www.investopedia.com/ask/answers/06/stockexchangeclosed.asp
+    
+    If New Year's Day falls on a Saturday, the exchange remains OPEN on the preceding Friday (Dec 31), although Dec31 is a Federal holiday
+    
     The NYSE and NASDAQ are open on Veterans Day and Columbus Day (or the day in which they are observed).
     The NYSE and NASDAQ are closed on Good Friday.
     2001-09-11 911
     2001-09-12 911
     2001-09-13 911
     2001-09-14 911
+    2004-06-11 honoring President Ronald Reagan
+
     2007-01-02 Mourning for President Ford
     *2010-12-31 open for year-end accounting, though it is federal holiday
     2012-10-29 Hurricane Sandy
     2012-10-30 Hurricane Sandy
     2018-12-05 George H W Bush
+    2025-01-09 closure for President Jimmy Carter's funeral
     """
-    dec31 = date(year, 12, 31)
+    
     holidays = [holiday_new_years(year), holiday_martin_luther(year), holiday_washington(year),
         holiday_good_friday(year), holiday_memorial(year), holiday_independence(year), holiday_labor(year),
         holiday_thanksgiving(year), holiday_christmas(year)]
 
     if year == 2001:
         holidays += [date(2001, 9, 11), date(2001, 9, 12), date(2001, 9, 13), date(2001, 9, 14)]
-    if year == 2007:
+    elif year == 2004:
+        holidays += [date(2004, 6, 11)]
+    elif year == 2007:
         holidays += [date(2007, 1, 2)]
-    if year == 2012:
+    elif year == 2012:
         holidays += [date(2012, 10, 29), date(2012, 10, 30)]
-    if year == 2018:
+    elif year == 2018:
         holidays += [date(2018, 12, 5)]
-    if is_friday(dec31) and year != 2010:
-        holidays += [dec31]
-    return holidays
+    elif year == 2025:
+        holidays += [date(2025, 1, 9)]
+    
+    if year >= 2021:
+        holidays += [holiday_juneteenth(year)]
+    
+    return sorted(holidays)
+
 
 
 
@@ -116,9 +130,12 @@ def federal_holidays(year: int) -> list[date]:
             , holiday_memorial(year), holiday_independence(year), holiday_labor(year)
             , holiday_columbus(year), holiday_veterans(year), holiday_thanksgiving(year), holiday_christmas(year)]
     if is_friday(dec31):
-        return holidays + [dec31]
-    else:
-        return holidays
+        holidays += [dec31]
+    
+    if year >= 2021:
+        holidays += [holiday_juneteenth(year)]
+    
+    return sorted(holidays)
 
 
 def get_gmt_datetime(url: str) -> datetime:
@@ -255,6 +272,21 @@ def holiday_memorial(year: int) -> date:
     return last_monday(date(year, 6, 1))
 
 
+def holiday_juneteenth(year: int) -> date:
+    """
+    Since 2021
+    """
+    jun19 = date(year, 6, 19)
+    if is_saturday(jun19):
+        return date(year, 6, 18)
+    elif is_sunday(jun19):
+        return date(year, 6, 20)
+    else:
+        return jun19
+
+
+
+
 def holiday_independence(year: int) -> date:
     july4 = date(year, 7, 4)
     if is_saturday(july4):
@@ -343,6 +375,35 @@ def is_weekly_close(d: date) -> bool:
         return True
     else:
         return False
+
+
+
+def is_iso_date_format(s: str) -> bool:
+    s_list: list[str] = s.split('-')     # ['2020', '02', '29']
+    length_list: list[int] = list(map(len, s_list))    # [4, 2, 2]
+    date_str: str = "".join(s_list)           #  '20200229'
+    is_all_decimal: bool = date_str.isdecimal()
+    is422: bool = length_list == [4, 2, 2]
+
+    passtest1: bool = is_all_decimal and is422
+
+    valid_year: bool = 0 < int(s_list[0]) < 10000 if passtest1 else False
+
+    is_leap_year: bool = int(s_list[0]) % 4 == 0 if valid_year else False
+
+    valid_month: bool = 0 < int(s_list[1]) < 13 if passtest1 else False
+
+    month_int: int = int(s_list[1]) if valid_month else 0
+    is_large_month: bool = month_int in [1,3,5,7,8,10,12]
+
+    is_feb: bool = month_int == 2
+
+    valid_day: bool = (0 < int(s_list[2]) < 29 + is_leap_year if is_feb
+                       else 0 < int(s_list[2]) < 31 + is_large_month if valid_month
+                       else False)
+
+    return valid_year and valid_month and valid_day
+
 
 
 
@@ -553,8 +614,41 @@ def this_saturday(d: date) -> date:
 
 
 
+
+def make_date_ranges(FROM: date, TO: date, years: int) -> list[tuple[date, date]]:    
+    """
+    This function returns a list of tuples. 'years' parameter is the maximum time length of each tuple.
+    'years' parameter can be 1 or more. 
+
+        FROM = date(2019, 7, 1)
+        TO = date(2023, 9, 30)
+        xs = make_date_ranges(FROM, TO, 2)
+
+        # xs will be [(datetime.date(2019, 7, 1), datetime.date(2020, 12, 31)), (datetime.date(2021, 1, 1), datetime.date(2022, 12, 31)), (datetime.date(2023, 1, 1), datetime.date(2023, 9, 30))]
+    """
+    if years < 1 or TO < FROM:
+        return []
+
+    ranges = []
+    range_start = FROM
+    range_end = date(FROM.year + (years - 1), 12, 31)
+
+    while range_end < TO:
+        date_tuple = (range_start, range_end)
+        ranges.append(date_tuple)
+        range_start = date(range_end.year + 1, 1, 1)
+        range_end = date(range_end.year + years, 12, 31)
+    else:
+        date_tuple = (range_start, TO)
+        ranges.append(date_tuple)
+
+    return ranges
+
+
+
+
 if __name__ == '__main__':
 
-    d1 = date(2027, 12, 1)
-    friday = get_third_friday(1, d1).strftime("%Y%m%d")
-    print(friday)  # '20280121'
+    #d1 = date(2027, 12, 1)
+    #friday = get_third_friday(1, d1).strftime("%Y%m%d")
+    print(federal_holidays(2026))  # '20280121'
