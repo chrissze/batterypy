@@ -1,5 +1,27 @@
 
+from functools import reduce
+
 from typing import Any, List, Optional
+  
+def dot(*func):
+    def compose(f, g):
+        return lambda x : f(g(x))
+    return reduce(compose, func, lambda x : x)
+    
+
+
+def mapm(f, xs):
+    """ mapm(print, [1,2,3])  """
+    for x in xs:
+        f(x)
+    return True
+
+
+def maplist(f, xs):
+    """ newlist =  maplist(abs, [-1,-2])  """
+    return [f(x) for x in xs]
+
+
 
 
 class Infix:
