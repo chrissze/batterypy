@@ -34,44 +34,8 @@ def add_trading_days(d: date, i: int) -> date:
         return d
 
 
-def date_length(start: date, end: date) -> int:
-    if end >= start:
-        return len(date_range(start=start, end=end))
-
-    else:
-        return -(len(date_range(start=end, end=start)))
-
-
-def date_range(start: Optional[date] = None, end: Optional[date]=None, period: Optional[int]=None) -> list[date]:
-    result: list[date] = []
-    i: Optional[int] = period
-    d: date = start
-    if start is not None and end is not None and period is None:
-        if start <= end:
-            while d <= end:
-                result.append(d)
-                d += timedelta(days=1)
-            return result
-        else:
-            return []
-
-    elif start is not None and end is None and period is not None:
-        if period > 0:
-            while i > 0:
-                result.append(d)
-                d += timedelta(days=1)
-                i -= 1
-            return result
-        elif period < 0:
-            while i < 0:
-                result.append(d)
-                d -= timedelta(days=1)
-                i += 1
-            return result
-        else:
-            return []
-    else:
-        return []
+    
+    
 
 
 def exchange_holidays(year: int) -> list[date]:
@@ -237,20 +201,18 @@ def get_utc_today() -> date:
 
 
 def gregorian_easter(year: int) -> date:
-    century = year // 100 + 1
-    shifted_epact = (11 * (year % 19) + 14 - (3 * century) // 4 + (8 * century + 5) // 25) % 30
-    adjusted_epact = shifted_epact + 1 if shifted_epact == 0 or (shifted_epact == 1 and year % 19 > 10) \
+    century: int = year // 100 + 1
+    shifted_epact: int = (11 * (year % 19) + 14 - (3 * century) // 4 + (8 * century + 5) // 25) % 30
+    adjusted_epact: int = shifted_epact + 1 if shifted_epact == 0 or (shifted_epact == 1 and year % 19 > 10) \
         else shifted_epact
-    pascha_moon = add_days(date(year, 4, 19), - adjusted_epact)
-    easter = next_sunday(pascha_moon)
+    pascha_moon: date = date(year, 4, 19) - timedelta(days=adjusted_epact)
+    easter: date = next_sunday(pascha_moon)
     return easter
 
 
 def holiday_new_years(year: int) -> date:
     jan1 = date(year, 1, 1)
-    if is_saturday(jan1):
-        return add_days(jan1, -1)
-    elif is_sunday(jan1):
+    if is_sunday(jan1):
         return date(year, 1, 2)
     else:
         return jan1
@@ -367,11 +329,57 @@ def is_trading_day(d: date) -> bool:
     return not (is_weekend(d) or is_exchange_holiday(d))
 
 
-def is_weekly_close(d: date) -> bool:
-    tomorrow = add_days(d, 1)
+
+def is_first_settlement(d: date | str) -> bool:
+    """
+    This is 1st Friday option settlement.
+    """
+    if isinstance(d, str):
+        d: date = date.fromisoformat(d)
+    
+    day: int = d.day
+    
+    if day > 7:
+        return False
+    
+    return is_weekly_settlement(d)
+
+
+
+def is_fortnite_settlement(d: date | str) -> bool:
+    """
+    
+    """
+    return is_first_settlement(d) or is_monthly_settlement(d)
+
+
+
+def is_monthly_settlement(d: date | str) -> bool:
+    """
+    This is 3rd Friday option settlement.
+    """
+    if isinstance(d, str):
+        d: date = date.fromisoformat(d)
+    
+    day: int = d.day
+    
+    if day < 15 or day > 21:
+        return False
+    
+    return is_weekly_settlement(d)
+
+
+
+def is_weekly_settlement(d: date | str) -> bool:
+    if isinstance(d, str):
+        d: date = date.fromisoformat(d)
+    next_day: date = d + timedelta(days=1)
+    day2: date = d + timedelta(days=2)
     if is_friday(d) and not_exchange_holiday(d):
         return True
-    elif is_thursday(d) and is_exchange_holiday(tomorrow):
+    elif is_thursday(d) and is_exchange_holiday(next_day):
+        return True
+    elif is_wednesday(d) and is_exchange_holiday(next_day) and is_exchange_holiday(day2):
         return True
     else:
         return False
@@ -409,40 +417,112 @@ def is_iso_date_format(s: str) -> bool:
 
 
 def last_saturday(d: date) -> date:
-    n = d.toordinal() % 7 + 1
-    return add_days(d, -n)
+    n: int = d.toordinal() % 7 + 1
+    return d - timedelta(days=n)
 
 
 def last_friday(d: date) -> date:
     n = (d.toordinal() + 1) % 7 + 1
-    return add_days(d, -n)
+    return d - timedelta(days=n)
 
 
 def last_thursday(d: date) -> date:
     n = (d.toordinal() + 2) % 7 + 1
-    return add_days(d, -n)
+    return d - timedelta(days=n)
+
 
 
 def last_wednesday(d: date) -> date:
     n = (d.toordinal() + 3) % 7 + 1
-    return add_days(d, -n)
+    return d - timedelta(days=n)
 
 
 def last_tuesday(d: date) -> date:
     n = (d.toordinal() + 4) % 7 + 1
-    return add_days(d, -n)
+    return d - timedelta(days=n)
 
 
 def last_monday(d: date) -> date:
     n = (d.toordinal() + 5) % 7 + 1
-    return add_days(d, -n)
+    return d - timedelta(days=n)
 
 
 def last_sunday(d: date) -> date:
     n = (d.toordinal() + 6) % 7 + 1
-    return add_days(d, -n)
+    return d - timedelta(days=n)
 
 
+
+def make_date_list(start: date | str, end: date | str | None = None) -> list[date]:
+    """
+    ** INDEPENDENT **
+    
+    USED BY: make_td_list
+    """
+    if isinstance(start, str):
+        start: date = date.fromisoformat(start)
+    
+    if isinstance(end, str):
+        end: date = date.fromisoformat(end)
+    elif end is None:
+        end: date = date.today()
+    
+    # diff can be 0 or a negative int; (end - start) is a timedelta
+    # start + timedelta(days=diff) == end
+    diff: int = (end - start).days
+        
+    if diff > 0:
+        date_list: list[date] = [ start + timedelta(i) for i in range(diff + 1) ]
+        return date_list
+    else:
+        return []
+    
+
+
+def make_fortnite_list(start: date | str, end: date | str | None = None) -> list[date]:
+    """
+    DEPENDS: make_date_list, is_trading_day
+    """
+    date_list: list[date] = make_date_list(start=start, end=end) 
+    
+    fortnite_list: list[date] = [x for x in date_list if is_fortnite_settlement(x)]
+    
+    return fortnite_list
+
+
+
+def make_td_list(start: date | str, end: date | str | None = None) -> list[date]:
+    """
+    DEPENDS: make_date_list, is_trading_day
+    """
+    date_list: list[date] = make_date_list(start=start, end=end) 
+    
+    td_list: list[date] = [x for x in date_list if is_trading_day(x)]
+    
+    return td_list
+
+
+def make_monthly_list(start: date | str, end: date | str | None = None) -> list[date]:
+    """
+    DEPENDS: make_date_list, is_trading_day
+    """
+    date_list: list[date] = make_date_list(start=start, end=end) 
+    
+    monthly_list: list[date] = [x for x in date_list if is_monthly_settlement(x)]
+    
+    return monthly_list
+
+
+
+def make_weekly_list(start: date | str, end: date | str | None = None) -> list[date]:
+    """
+    DEPENDS: make_date_list, is_trading_day
+    """
+    date_list: list[date] = make_date_list(start=start, end=end) 
+    
+    monthly_list: list[date] = [x for x in date_list if is_weekly_settlement(x)]
+    
+    return monthly_list
 
 
 
@@ -521,8 +601,8 @@ def not_trading_day(d: date) -> bool:
     return is_weekend(d) or is_exchange_holiday(d)
 
 
-def not_weekly_close(d: date) -> bool:
-    return not is_weekly_close(d)
+def not_weekly_settlement(d: date) -> bool:
+    return not is_weekly_settlement(d)
 
 
 def previous_trading_day(d: date) -> date:
@@ -539,20 +619,6 @@ def previous_trading_day(d: date) -> date:
 
 
 
-
-
-def tdate_range(start: Optional[date] = None, end: Optional[date]=None, period: Optional[int]=None) -> list[date]:
-    normal = date_range(start=start, end=end, period=period)
-    result = [x for x in normal if is_trading_day(x)]
-    return result
-
-
-def tdate_length(start: date, end: date) -> int:
-    if end >= start:
-        return len(tdate_range(start=start, end=end))
-
-    else:
-        return -(len(tdate_range(start=end, end=start)))
 
 
 def this_sunday(d: date) -> date:
@@ -615,40 +681,17 @@ def this_saturday(d: date) -> date:
 
 
 
-def make_date_ranges(FROM: date, TO: date, years: int) -> list[tuple[date, date]]:    
-    """
-    This function returns a list of tuples. 'years' parameter is the maximum time length of each tuple.
-    'years' parameter can be 1 or more. 
-
-        FROM = date(2019, 7, 1)
-        TO = date(2023, 9, 30)
-        xs = make_date_ranges(FROM, TO, 2)
-
-        # xs will be [(datetime.date(2019, 7, 1), datetime.date(2020, 12, 31)), (datetime.date(2021, 1, 1), datetime.date(2022, 12, 31)), (datetime.date(2023, 1, 1), datetime.date(2023, 9, 30))]
-    """
-    if years < 1 or TO < FROM:
-        return []
-
-    ranges = []
-    range_start = FROM
-    range_end = date(FROM.year + (years - 1), 12, 31)
-
-    while range_end < TO:
-        date_tuple = (range_start, range_end)
-        ranges.append(date_tuple)
-        range_start = date(range_end.year + 1, 1, 1)
-        range_end = date(range_end.year + years, 12, 31)
-    else:
-        date_tuple = (range_start, TO)
-        ranges.append(date_tuple)
-
-    return ranges
-
-
 
 
 if __name__ == '__main__':
 
-    #d1 = date(2027, 12, 1)
-    #friday = get_third_friday(1, d1).strftime("%Y%m%d")
-    print(federal_holidays(2026))  # '20280121'
+    d1 = date(2025, 1, 1)
+    d2 = date(2025, 12, 31)
+    
+    x = make_fortnite_list(d1, d2) 
+    
+    
+    
+    
+    
+    print(x)
