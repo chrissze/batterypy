@@ -491,13 +491,20 @@ def make_fortnite_list(start: date | str, end: date | str | None = None) -> list
 
 
 
-def make_td_list(start: date | str, end: date | str | None = None) -> list[date]:
+def make_td_list(start: date | str, end: date | str | None = None, interval='daily') -> list[date]:
     """
     DEPENDS: make_date_list, is_trading_day
     """
     date_list: list[date] = make_date_list(start=start, end=end) 
     
-    td_list: list[date] = [x for x in date_list if is_trading_day(x)]
+    if interval == 'monthly':
+        td_list: list[date] = [x for x in date_list if is_monthly_settlement(x)]
+    elif interval == 'fortnite':
+        td_list: list[date] = [x for x in date_list if is_fortnite_settlement(x)]
+    elif interval == 'weekly':
+        td_list: list[date] = [x for x in date_list if is_weekly_settlement(x)]
+    else:
+        td_list: list[date] = [x for x in date_list if is_trading_day(x)]
     
     return td_list
 
