@@ -205,6 +205,8 @@ def gregorian_easter(year: int) -> date:
     shifted_epact: int = (11 * (year % 19) + 14 - (3 * century) // 4 + (8 * century + 5) // 25) % 30
     adjusted_epact: int = shifted_epact + 1 if shifted_epact == 0 or (shifted_epact == 1 and year % 19 > 10) \
         else shifted_epact
+    
+    #pascha_moon = add_days(date(year, 4, 19), - adjusted_epact)
     pascha_moon: date = date(year, 4, 19) - timedelta(days=adjusted_epact)
     easter: date = next_sunday(pascha_moon)
     return easter
@@ -539,10 +541,8 @@ def next_sunday(d: date) -> date:
 
     If d is Sunday, d.toordinal() % 7 is 0
 
-    Alternative syntax:
-    days_until_sunday = 7 - (d.toordinal() % 7)
     """
-    days_until_sunday = (13 - d.weekday()) % 7
+    days_until_sunday = 7 - (d.toordinal() % 7)
     return d + timedelta(days=days_until_sunday)
 
 
@@ -692,12 +692,13 @@ def this_saturday(d: date) -> date:
 
 if __name__ == '__main__':
 
-    d1 = date(2025, 1, 1)
+    d1 = date(2026, 1, 16)
     d2 = date(2025, 12, 31)
     
-    x = make_fortnite_list(d1, d2) 
     
+    #x = holiday_good_friday(2025) 
     
+    x = next_sunday(d1)
     
     
     
