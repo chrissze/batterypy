@@ -12,11 +12,6 @@ from urllib.error import URLError, HTTPError
 
 
 
-
-def add_days(d: date, i: int) -> date:
-    return d + timedelta(days=i)
-
-
 def add_trading_days(d: date, i: int) -> date:
     n = i
     day = d
@@ -206,7 +201,6 @@ def gregorian_easter(year: int) -> date:
     adjusted_epact: int = shifted_epact + 1 if shifted_epact == 0 or (shifted_epact == 1 and year % 19 > 10) \
         else shifted_epact
     
-    #pascha_moon = add_days(date(year, 4, 19), - adjusted_epact)
     pascha_moon: date = date(year, 4, 19) - timedelta(days=adjusted_epact)
     easter: date = next_sunday(pascha_moon)
     return easter
@@ -327,17 +321,25 @@ def is_exchange_holiday(d: date) -> bool:
 def is_federal_holiday(d: date) -> bool:
     return d in federal_holidays(d.year)
 
-def is_trading_day(d: date) -> bool:
+def is_trading_day(d: date | str) -> bool:
+    """
+    DEPENDS: parse_date
+    """
+    if isinstance(d, str):
+        d: date | None = parse_date(d)
+        
     return not (is_weekend(d) or is_exchange_holiday(d))
 
 
 
 def is_first_settlement(d: date | str) -> bool:
     """
+    DEPENDS: parse_date
+    
     This is 1st Friday option settlement.
     """
     if isinstance(d, str):
-        d: date = date.fromisoformat(d)
+        d: date | None = parse_date(d)
     
     day: int = d.day
     
@@ -350,18 +352,22 @@ def is_first_settlement(d: date | str) -> bool:
 
 def is_fortnite_settlement(d: date | str) -> bool:
     """
-    
+    DEPENDS: parse_date
     """
+    if isinstance(d, str):
+        d: date | None = parse_date(d)
+        
     return is_first_settlement(d) or is_monthly_settlement(d)
 
 
 
 def is_monthly_settlement(d: date | str) -> bool:
     """
+    DEPENDS: parse_date
     This is 3rd Friday option settlement.
     """
     if isinstance(d, str):
-        d: date = date.fromisoformat(d)
+        d: date | None = parse_date(d)
     
     day: int = d.day
     
@@ -373,10 +379,16 @@ def is_monthly_settlement(d: date | str) -> bool:
 
 
 def is_weekly_settlement(d: date | str) -> bool:
+    """
+    DEPENDS: parse_date
+    """
     if isinstance(d, str):
-        d: date = date.fromisoformat(d)
+        d: date | None = parse_date(d)
+
     next_day: date = d + timedelta(days=1)
+
     day2: date = d + timedelta(days=2)
+
     if is_friday(d) and not_exchange_holiday(d):
         return True
     elif is_thursday(d) and is_exchange_holiday(next_day):
@@ -418,38 +430,80 @@ def is_iso_date_format(s: str) -> bool:
 
 
 
-def last_saturday(d: date) -> date:
+def last_saturday(d: date | str) -> date:
+    """
+    DEPENDS: parse_date
+    """
+    if isinstance(d, str):
+        d: date | None = parse_date(d)
+
     n: int = d.toordinal() % 7 + 1
     return d - timedelta(days=n)
 
 
-def last_friday(d: date) -> date:
+def last_friday(d: date | str) -> date:
+    """
+    DEPENDS: parse_date
+    """
+    if isinstance(d, str):
+        d: date | None = parse_date(d)
+
     n = (d.toordinal() + 1) % 7 + 1
     return d - timedelta(days=n)
 
 
-def last_thursday(d: date) -> date:
+def last_thursday(d: date | str) -> date:
+    """
+    DEPENDS: parse_date
+    """
+    if isinstance(d, str):
+        d: date | None = parse_date(d)
+
     n = (d.toordinal() + 2) % 7 + 1
     return d - timedelta(days=n)
 
 
 
-def last_wednesday(d: date) -> date:
+def last_wednesday(d: date | str) -> date:
+    """
+    DEPENDS: parse_date
+    """
+    if isinstance(d, str):
+        d: date | None = parse_date(d)
+
     n = (d.toordinal() + 3) % 7 + 1
     return d - timedelta(days=n)
 
 
-def last_tuesday(d: date) -> date:
+def last_tuesday(d: date | str) -> date:
+    """
+    DEPENDS: parse_date
+    """
+    if isinstance(d, str):
+        d: date | None = parse_date(d)
+
     n = (d.toordinal() + 4) % 7 + 1
     return d - timedelta(days=n)
 
 
-def last_monday(d: date) -> date:
+def last_monday(d: date | str) -> date:
+    """
+    DEPENDS: parse_date
+    """
+    if isinstance(d, str):
+        d: date | None = parse_date(d)
+
     n = (d.toordinal() + 5) % 7 + 1
     return d - timedelta(days=n)
 
 
-def last_sunday(d: date) -> date:
+def last_sunday(d: date | str) -> date:
+    """
+    DEPENDS: parse_date
+    """
+    if isinstance(d, str):
+        d: date | None = parse_date(d)
+
     n = (d.toordinal() + 6) % 7 + 1
     return d - timedelta(days=n)
 
@@ -457,15 +511,15 @@ def last_sunday(d: date) -> date:
 
 def make_date_list(start: date | str, end: date | str | None = None) -> list[date]:
     """
-    ** INDEPENDENT **
+    DEPENDS: parse_date
     
     USED BY: make_td_list
     """
     if isinstance(start, str):
-        start: date = date.fromisoformat(start)
-    
+        start: date = parse_date(start)
+
     if isinstance(end, str):
-        end: date = date.fromisoformat(end)
+        end: date = parse_date(end)
     elif end is None:
         end: date = date.today()
     
@@ -474,29 +528,21 @@ def make_date_list(start: date | str, end: date | str | None = None) -> list[dat
     diff: int = (end - start).days
         
     if diff > 0:
-        date_list: list[date] = [ start + timedelta(i) for i in range(diff + 1) ]
+        date_list: list[date] = [ start + timedelta(days=i) for i in range(diff + 1) ]
         return date_list
     else:
         return []
     
 
 
-def make_fortnite_list(start: date | str, end: date | str | None = None) -> list[date]:
-    """
-    DEPENDS: make_date_list, is_trading_day
-    """
-    date_list: list[date] = make_date_list(start=start, end=end) 
-    
-    fortnite_list: list[date] = [x for x in date_list if is_fortnite_settlement(x)]
-    
-    return fortnite_list
 
 
 
 def make_td_list(start: date | str, end: date | str | None = None, interval='daily') -> list[date]:
     """
-    DEPENDS: make_date_list, is_trading_day
+    DEPENDS: make_date_list, is_monthly_settlement, is_fortnite_settlement, is_weekly_settlement, is_trading_day
     """
+    # make_date_list accepts both date obj and str
     date_list: list[date] = make_date_list(start=start, end=end) 
     
     if interval == 'monthly':
@@ -511,89 +557,93 @@ def make_td_list(start: date | str, end: date | str | None = None, interval='dai
     return td_list
 
 
-def make_monthly_list(start: date | str, end: date | str | None = None) -> list[date]:
+
+
+def next_sunday(d: date | str) -> date:
     """
-    DEPENDS: make_date_list, is_trading_day
-    """
-    date_list: list[date] = make_date_list(start=start, end=end) 
+    DEPENDS: parse_date
     
-    monthly_list: list[date] = [x for x in date_list if is_monthly_settlement(x)]
-    
-    return monthly_list
-
-
-
-def make_weekly_list(start: date | str, end: date | str | None = None) -> list[date]:
-    """
-    DEPENDS: make_date_list, is_trading_day
-    """
-    date_list: list[date] = make_date_list(start=start, end=end) 
-    
-    monthly_list: list[date] = [x for x in date_list if is_weekly_settlement(x)]
-    
-    return monthly_list
-
-
-
-def next_sunday(d: date) -> date:
-    """
     If d is Sunday, return d + 7
 
     If d is Sunday, d.toordinal() % 7 is 0
 
     """
+    if isinstance(d, str):
+        d: date | None = parse_date(d)
+
     days_until_sunday = 7 - (d.toordinal() % 7)
     return d + timedelta(days=days_until_sunday)
 
 
-def next_monday(d: date) -> date:
+def next_monday(d: date | str) -> date:
+    if isinstance(d, str):
+        d: date | None = parse_date(d)
+
     n = (d.toordinal() - 1) % 7
     return d + timedelta(days = 7 - n)
 
 
-def next_tuesday(d: date) -> date:
+def next_tuesday(d: date | str) -> date:
+    if isinstance(d, str):
+        d: date | None = parse_date(d)
+
     n = (d.toordinal() - 2) % 7
     return d + timedelta(days = 7 - n)
 
-def next_wednesday(d: date) -> date:
+def next_wednesday(d: date | str) -> date:
+    if isinstance(d, str):
+        d: date | None = parse_date(d)
+
     n = (d.toordinal() - 3) % 7
     return d + timedelta(days = 7 - n)
 
 
-def next_thursday(d: date) -> date:
+def next_thursday(d: date | str) -> date:
+    if isinstance(d, str):
+        d: date | None = parse_date(d)
+
     n = (d.toordinal() - 4) % 7
     return d + timedelta(days = 7 - n)
 
 
-def next_friday(d: date) -> date:
+def next_friday(d: date | str) -> date:
     """
     USED BY: get_third_friday
 
     """
+    if isinstance(d, str):
+        d: date | None = parse_date(d)
+
     n = (d.toordinal() - 5) % 7
     return d + timedelta(days = 7 - n)
 
 
-def next_saturday(d: date) -> date:
+def next_saturday(d: date | str) -> date:
+    if isinstance(d, str):
+        d: date | None = parse_date(d)
+
     n = (d.toordinal() - 6) % 7
     return d + timedelta(days = 7 - n)
     
 
 
-def next_trading_day(d: date) -> date:
-    if is_trading_day(day1 := add_days(d, 1)):
+def next_trading_day(d: date | str) -> date:
+    if isinstance(d, str):
+        d: date | None = parse_date(d)
+
+    if is_trading_day(day1 := d + timedelta(days=1)):
         return day1
-    elif is_trading_day(day2 := add_days(d, 2)):
+    elif is_trading_day(day2 := d + timedelta(days=2)):
         return day2
-    elif is_trading_day(day3 := add_days(d, 3)):
+    elif is_trading_day(day3 := d + timedelta(days=3)):
         return day3
-    elif is_trading_day(day4 := add_days(d, 4)):
+    elif is_trading_day(day4 := d + timedelta(days=4)):
         return day4
     else:
-        return add_days(d, 5)
+        return d + timedelta(days=5)
 
 
-def not_exchange_holiday(d: date) -> bool:
+def not_exchange_holiday(d: date | str) -> bool:
     return not is_exchange_holiday(d)
 
 
@@ -604,25 +654,43 @@ def not_federal_holiday(d: date) -> bool:
 
 
 
-def not_trading_day(d: date) -> bool:
+def not_trading_day(d: date | str) -> bool:
     return is_weekend(d) or is_exchange_holiday(d)
 
 
-def not_weekly_settlement(d: date) -> bool:
+def not_weekly_settlement(d: date | str) -> bool:
     return not is_weekly_settlement(d)
 
 
+def parse_date(date_str: str) -> date | None:
+    
+    s = date_str.strip()
+    
+    l = len(s)
+    
+    if l == 10:
+        return date.fromisoformat(s)
+    elif l == 8:
+        return date.strptime(s, '%Y%m%d')
+    elif l == 6:
+        return date.strptime(s, '%y%m%d')  # 1969-01-01 to 2068-12-31
+    else:
+        return None    
+    
+
+
+
 def previous_trading_day(d: date) -> date:
-    if is_trading_day(pday1 := add_days(d, -1)):
+    if is_trading_day(pday1 := d - timedelta(days=1)):
         return pday1
-    elif is_trading_day(pday2 := add_days(d, -2)):
+    elif is_trading_day(pday2 := d - timedelta(days=2)):
         return pday2
-    elif is_trading_day(pday3 := add_days(d, -3)):
+    elif is_trading_day(pday3 := d - timedelta(days=3)):
         return pday3
-    elif is_trading_day(pday4 := add_days(d, -4)):
+    elif is_trading_day(pday4 := d - timedelta(days=4)):
         return pday4
     else:
-        return add_days(d, -5)
+        return d - timedelta(days=5)
 
 
 
@@ -692,14 +760,11 @@ def this_saturday(d: date) -> date:
 
 if __name__ == '__main__':
 
-    d1 = date(2026, 1, 16)
-    d2 = date(2025, 12, 31)
+    d1 = ' 2025-12-25'
+    d2 = '20110331'
+    d3 = ' 681231  '
     
     
-    #x = holiday_good_friday(2025) 
-    
-    x = next_sunday(d1)
-    
-    
+    x = parse_date(d1) 
     
     print(x)

@@ -1,6 +1,6 @@
 from datetime import date
 
-from batterypy.cal import holiday_good_friday, next_sunday, is_friday, is_trading_day
+from batterypy.cal import holiday_good_friday, next_sunday, is_friday, is_trading_day, parse_date
 
 
 
@@ -20,6 +20,9 @@ def test_holiday_good_friday():
     assert d28 == date(2028, 4, 14)
     assert d29 == date(2029, 3, 30)
     assert d30 == date(2030, 4, 19)
+
+
+
 
 
 def test_is_friday():
@@ -89,4 +92,29 @@ def test_next_sunday():
     assert next_sunday(d6) == date(2026, 1, 11)
     assert next_sunday(d7) == date(2026, 1, 11)
     
+
+
+
+def test_parse_date():
+    s1 = '2001-01-01'
+    s10 = '  2001-01-01  '
+    
+    s2 = '20020202'
+    s20 = '  20020202    '
+
+    s3 = '690101'
+    s4 = '  681231  '
+    
+    sx = '68131'
+    
+    assert parse_date(s1) == date(2001, 1, 1)
+    assert parse_date(s10) == date(2001, 1, 1)
+    
+    assert parse_date(s2) == date(2002, 2, 2)
+    assert parse_date(s20) == date(2002, 2, 2)
+    
+    assert parse_date(s3) == date(1969, 1, 1)
+    assert parse_date(s4) == date(2068, 12, 31)
+    
+    assert parse_date(sx) is None
     
